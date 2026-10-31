@@ -1,0 +1,7 @@
+# Артефакты
+screenshots/
+*.png.tmp
+
+# Системные файлы
+Thumbs.db
+Desktop.ini
