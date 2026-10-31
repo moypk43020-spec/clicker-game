@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#17212b">
+  <title>Кликер — Telegram Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <h1 class="title">🪙 Кликер</h1>
+    <button id="reset-btn" class="reset-btn" title="Сбросить прогресс">↺</button>
+  </header>
+
+  <main class="game">
+    <div class="coins-block">
+      <div id="coins" class="coins">0</div>
+      <div class="income">
+        <span id="per-click">+1</span> за клик ·
+        <span id="per-sec">+0</span>/сек
+      </div>
+    </div>
+
+    <div class="click-zone">
+      <button id="click-btn" class="coin-btn" aria-label="Кликнуть">
+        <span class="coin-face">🪙</span>
+      </button>
+    </div>
+
+    <h2 class="shop-title">Улучшения</h2>
+    <div id="shop" class="shop"><!-- карточки улучшений рендерятся из game.js --></div>
+  </main>
+
+  <div id="floaters" class="floaters"><!-- всплывающие "+N" --></div>
+
+  <script src="js/telegram.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
