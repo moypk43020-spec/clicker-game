@@ -3,10 +3,31 @@
 (function () {
   'use strict';
 
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  let initialized = false;
 
   function init() {
-    if (!tg) return;
+    // SDK подключён с async: если Telegram недоступен (обычный браузер/офлайн) —
+    // ждём до 5 секунд, затем тихо продолжаем без интеграции
+    if (initialized) return;
+    if (tg) {
+      initTelegram();
+    } else {
+      const startedAt = Date.now();
+      const timer = setInterval(() => {
+        tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+          clearInterval(timer);
+          initTelegram();
+        } else if (Date.now() - startedAt > 5000) {
+          clearInterval(timer);
+        }
+      }, 100);
+    }
+  }
+
+  function initTelegram() {
+    initialized = true;
 
     try {
       tg.ready();          // сообщаем Telegram, что приложение загрузилось

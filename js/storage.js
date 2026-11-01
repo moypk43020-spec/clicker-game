@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const KEY = 'clicker_save_v1';
+  const KEY = 'battle_clicker_save_v2';
 
   function save(state) {
     try {

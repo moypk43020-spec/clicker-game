@@ -11,6 +11,9 @@
   --accent-pressed: #4a99d3;
   --success: #6fce73;
   --danger: #e17076;
+  --gold: #f5a623;
+  --hp: #e17076;
+  --stamina: #ffd76e;
   --disabled: #59666f;
 }
 
@@ -40,6 +43,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 12px 16px;
   background: var(--bg-secondary);
   flex-shrink: 0;
@@ -48,6 +52,15 @@ body {
 .title {
   font-size: 18px;
   font-weight: 700;
+}
+
+.gold {
+  flex: 1;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
 }
 
 .reset-btn {
@@ -75,63 +88,173 @@ body {
   gap: 12px;
 }
 
-.coins-block {
+/* ---------- Карточка врага ---------- */
+.enemy-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px;
   text-align: center;
-  padding-top: 4px;
 }
 
-.coins {
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  font-variant-numeric: tabular-nums;
+.enemy-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
 }
 
-.income {
+.enemy-level {
   color: var(--text-muted);
-  font-size: 14px;
-  margin-top: 2px;
-}
-
-.income span {
-  color: var(--success);
   font-weight: 600;
+  margin-left: 4px;
 }
 
-/* ---------- Монета ---------- */
-.click-zone {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
+/* Общие бары */
+.hp-bar,
+.stamina-bar {
+  position: relative;
+  height: 22px;
+  background: rgba(0, 0, 0, .35);
+  border-radius: 11px;
+  overflow: hidden;
 }
 
-.coin-btn {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  font-size: 90px;
-  line-height: 1;
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #f0908f, var(--hp));
+  border-radius: 11px;
+  transition: width .15s ease-out;
+}
+
+.bar-text {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, #ffd76e, #f5a623 55%, #c77f12);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+  font-variant-numeric: tabular-nums;
+}
+
+.enemy-reward {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.enemy-reward span {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* ---------- Атака ---------- */
+.attack-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.attack-btn {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #4a99d3, #2b6ea8 55%, #1d4f7c);
   box-shadow:
-    0 0 0 8px rgba(245, 166, 35, .18),
+    0 0 0 8px rgba(100, 181, 239, .15),
     0 8px 24px rgba(0, 0, 0, .45);
-  transition: transform .08s ease, box-shadow .08s ease;
+  transition: transform .08s ease, box-shadow .15s ease;
 }
 
-.coin-btn:active {
+.attack-btn:disabled {
+  cursor: default;
+}
+
+.attack-btn:not(:disabled):active {
   transform: scale(.92);
-  box-shadow:
-    0 0 0 4px rgba(245, 166, 35, .15),
-    0 4px 12px rgba(0, 0, 0, .4);
 }
 
-.coin-face {
+.attack-btn.ready {
+  box-shadow:
+    0 0 0 8px rgba(100, 181, 239, .3),
+    0 8px 24px rgba(0, 0, 0, .45);
+}
+
+/* Вуаль перезарядки: поднимается снизу, исчезая по готовности */
+.attack-cooldown {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+
+.attack-face {
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .35));
+  position: relative;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+}
+
+.stat {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.stat span {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Стамина ---------- */
+.stamina-block {
+  padding: 0 2px;
+}
+
+.bar-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar-value {
+  color: var(--stamina);
+  font-variant-numeric: tabular-nums;
+}
+
+.stamina-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #ffe49c, var(--stamina));
+  border-radius: 11px;
+  transition: width .1s linear;
+}
+
+.bar-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.bar-hint.low {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 /* ---------- Магазин ---------- */
@@ -203,7 +326,7 @@ body {
 .upgrade-price {
   font-weight: 700;
   font-size: 15px;
-  color: var(--success);
+  color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -211,7 +334,7 @@ body {
   color: var(--disabled);
 }
 
-/* ---------- Всплывающие "+N" ---------- */
+/* ---------- Всплывающие цифры ---------- */
 .floaters {
   position: fixed;
   inset: 0;
@@ -223,10 +346,20 @@ body {
 .floater {
   position: absolute;
   font-weight: 800;
-  font-size: 22px;
-  color: var(--success);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, .5);
+  font-size: 24px;
+  color: var(--text);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, .6);
   animation: floatUp .8s ease-out forwards;
+}
+
+.floater.crit {
+  font-size: 32px;
+  color: var(--gold);
+}
+
+.floater.reward {
+  color: var(--gold);
+  font-size: 20px;
 }
 
 @keyframes floatUp {

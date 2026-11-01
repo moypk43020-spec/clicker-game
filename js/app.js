@@ -1,4 +1,4 @@
-/* Точка входа: связывает игровую логику, сохранение и UI. */
+/* Точка входа: связывает боевую логику, сохранение и UI. */
 (function () {
   'use strict';
 
@@ -9,10 +9,20 @@
   Game.initState(Storage.load());
 
   // ---------- DOM ----------
-  const coinsEl = document.getElementById('coins');
-  const perClickEl = document.getElementById('per-click');
-  const perSecEl = document.getElementById('per-sec');
-  const clickBtn = document.getElementById('click-btn');
+  const goldEl = document.getElementById('gold');
+  const enemyIconEl = document.getElementById('enemy-icon');
+  const enemyNameEl = document.getElementById('enemy-name');
+  const enemyLevelEl = document.getElementById('enemy-level');
+  const enemyHpFillEl = document.getElementById('enemy-hp-fill');
+  const enemyHpTextEl = document.getElementById('enemy-hp-text');
+  const enemyRewardEl = document.getElementById('enemy-reward');
+  const attackBtn = document.getElementById('attack-btn');
+  const attackCooldownEl = document.getElementById('attack-cooldown');
+  const statPowerEl = document.getElementById('stat-power');
+  const statCritEl = document.getElementById('stat-crit');
+  const staminaFillEl = document.getElementById('stamina-fill');
+  const staminaTextEl = document.getElementById('stamina-text');
+  const staminaHintEl = document.getElementById('stamina-hint');
   const shopEl = document.getElementById('shop');
   const floatersEl = document.getElementById('floaters');
   const resetBtn = document.getElementById('reset-btn');
@@ -83,23 +93,31 @@
     }
   }
 
-  /* ---------- Клик по монете ---------- */
-  clickBtn.addEventListener('click', (e) => {
-    const gain = Game.click();
-    TG.haptic('light');
-    spawnFloater('+' + fmt(gain), e.clientX, e.clientY);
+  /* ---------- Атака ---------- */
+  function doAttack(e) {
+    const result = Game.attack(performance.now());
+    if (!result) return;
+
+    TG.haptic(result.crit ? 'success' : 'light');
+    spawnFloater('−' + fmt(result.damage), e.clientX, e.clientY, result.crit ? 'crit' : '');
+    if (result.killed) {
+      spawnFloater('+' + fmt(result.reward) + ' 🪙', e.clientX, e.clientY - 40, 'reward');
+    }
     render();
     Storage.save(Game.state);
-  });
+  }
 
-  /* ---------- Всплывающие "+N" ---------- */
-  function spawnFloater(text, x, y) {
+  attackBtn.addEventListener('click', doAttack);
+  attackBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  /* ---------- Всплывающие цифры ---------- */
+  function spawnFloater(text, x, y, extraClass) {
     const el = document.createElement('div');
-    el.className = 'floater';
+    el.className = 'floater' + (extraClass ? ' ' + extraClass : '');
     el.textContent = text;
-    // Если клик был с клавиатуры — показываем над монетой
+    // Если события с координатами нет (клавиатура) — над кнопкой атаки
     if (!x && !y) {
-      const r = clickBtn.getBoundingClientRect();
+      const r = attackBtn.getBoundingClientRect();
       x = r.left + r.width / 2;
       y = r.top + r.height / 3;
     }
@@ -120,11 +138,40 @@
   });
 
   /* ---------- Рендер ---------- */
+  let lastRender = 0;
+
   function render() {
-    coinsEl.textContent = fmt(Game.state.coins);
-    perClickEl.textContent = '+' + fmt(Game.perClick());
-    perSecEl.textContent = '+' + fmt(Game.perSecond());
+    const enemy = Game.currentEnemy();
+    goldEl.textContent = fmt(Game.state.gold);
+
+    enemyIconEl.textContent = enemy.icon;
+    enemyNameEl.textContent = enemy.name;
+    enemyLevelEl.textContent = '#' + enemy.level;
+    enemyRewardEl.textContent = fmt(enemy.reward);
+
+    const hpPct = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
+    enemyHpFillEl.style.width = hpPct + '%';
+    enemyHpTextEl.textContent = fmt(Math.max(0, enemy.hp)) + ' / ' + fmt(enemy.maxHp);
+
+    // Стамина
+    const st = Game.stamina;
+    const stMax = Game.maxStamina();
+    const stPct = (st / stMax) * 100;
+    staminaFillEl.style.width = stPct + '%';
+    staminaTextEl.textContent = Math.floor(st) + ' / ' + stMax;
+
+    const canAttack = Game.canAttack(performance.now());
+    staminaHintEl.textContent = '−' + Game.STAMINA_PER_HIT + ' за удар · реген ' + Game.staminaRegen().toFixed(1) + '/сек';
+    staminaHintEl.classList.toggle('low', st < Game.STAMINA_PER_HIT);
+    attackBtn.classList.toggle('ready', canAttack);
+    attackBtn.disabled = !canAttack;
+
+    // Статы
+    statPowerEl.textContent = fmt(Game.power());
+    statCritEl.textContent = Math.round(Game.critChance() * 100) + '%';
+
     renderShop();
+    lastRender = performance.now();
   }
 
   /* ---------- Игровой цикл ---------- */
@@ -135,8 +182,18 @@
     const delta = now - lastTick;
     lastTick = now;
 
-    Game.tickIdle(delta);
-    render();
+    // Логика: реген стамины, наёмник
+    Game.tick(delta);
+
+    // Вуаль перезарядки (каждый кадр, без полного рендера):
+    // сразу после удара закрывает кнопку, по готовности исчезает
+    const cdProgress = Game.cooldownProgress(now);
+    attackCooldownEl.style.transform = 'scaleY(' + (1 - cdProgress) + ')';
+
+    // Полный рендер ~10 раз в секунду
+    if (now - lastRender > 100) {
+      render();
+    }
 
     // Автосохранение раз в 3 секунды
     if (now - lastSave > 3000) {
