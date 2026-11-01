@@ -2,12 +2,6 @@
 (function () {
   'use strict';
 
-  // Инициализация Telegram
-  TG.init();
-
-  // Загрузка прогресса
-  Game.initState(Storage.load());
-
   // ---------- DOM ----------
   const goldEl = document.getElementById('gold');
   const enemyIconEl = document.getElementById('enemy-icon');
@@ -211,7 +205,25 @@
   });
 
   /* ---------- Старт ---------- */
+  TG.init();
+
+  // Загрузка прогресса (локальный сейв текущего пользователя)
+  Game.initState(Storage.load());
+
   buildShop();
   render();
   requestAnimationFrame(loop);
+
+  // Облачный сейв Telegram важнее локального, если там прогресс больше —
+  // так прогресс синхронизируется между устройствами одного аккаунта.
+  // Сохранения включаются только ПОСЛЕ завершения начальной загрузки,
+  // чтобы пустое состояние не перезаписало облачный сейв.
+  Storage.loadFromCloud((cloud) => {
+    if (cloud && cloud.coins > Game.state.coins) {
+      Game.initState(cloud);
+    }
+    Storage.markReady();
+    Storage.save(Game.state);
+    render();
+  });
 })();
